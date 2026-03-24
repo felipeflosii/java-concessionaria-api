@@ -1,4 +1,4 @@
 package br.com.fiap.dtos.response;
 
-public class CarroResponseDTO {
+public class CarResponseDTO {
 }

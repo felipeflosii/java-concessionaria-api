@@ -1,4 +1,4 @@
 package br.com.fiap.services;
 
-public class CarroService {
+public class CarService {
 }

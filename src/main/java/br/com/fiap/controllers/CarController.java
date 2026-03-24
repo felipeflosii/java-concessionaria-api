@@ -1,4 +1,4 @@
 package br.com.fiap.controllers;
 
-public class CarroController {
+public class CarController {
 }
