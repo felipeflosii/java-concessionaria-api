@@ -1,7 +1,7 @@
 package br.com.fiap.domain.models;
 
-import br.com.fiap.enums.VehicleColor;
-import br.com.fiap.enums.VehicleBrand;
+import br.com.fiap.enums.CarColor;
+import br.com.fiap.enums.CarBrand;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,10 +23,10 @@ public class Vehicle {
     private Integer mileage;
 
     @Enumerated(EnumType.STRING)
-    private VehicleColor color;
+    private CarColor color;
 
     private String customColor;
 
     @Enumerated(EnumType.STRING)
-    private VehicleBrand brand;
+    private CarBrand brand;
 }

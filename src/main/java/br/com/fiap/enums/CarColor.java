@@ -1,6 +1,6 @@
 package br.com.fiap.enums;
 
-public enum VehicleColor {
+public enum CarColor {
     PRETO,
     BRANCO,
     PRATA,
