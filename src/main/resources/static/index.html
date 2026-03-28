@@ -11,54 +11,69 @@
 </head>
 <body>
 
-  <header class="header">
-    <div class="header__inner">
-      <div class="header__brand">
-        <span class="header__logo">⬡</span>
-        <div>
-          <span class="header__title">AutoGest</span>
-          <span class="header__sub">Gestão de Frota</span>
-        </div>
+<header class="header">
+  <div class="header__inner">
+    <div class="header__brand">
+      <span class="header__logo">⬡</span>
+      <div>
+        <span class="header__title">AutoGest</span>
+        <span class="header__sub">Gestão de Frota</span>
       </div>
-      <button class="btn btn--primary btn--add" id="btn-open-modal">
-        <span class="btn__icon">+</span> Novo Veículo
-      </button>
     </div>
-  </header>
+    <button class="btn btn--primary btn--add" id="btn-open-modal">
+      <span class="btn__icon">+</span> Novo Veículo
+    </button>
+  </div>
+</header>
 
-  <div class="toast-container" id="toast-container"></div>
+<div class="toast-container" id="toast-container"></div>
 
-  <main class="main">
+<main class="main">
 
-    <section class="stats" id="stats-bar">
-      <div class="stat-card" id="stat-total">
-        <span class="stat-card__value">—</span>
-        <span class="stat-card__label">Total</span>
-      </div>
-      <div class="stat-card stat-card--green" id="stat-disponivel">
-        <span class="stat-card__value">—</span>
-        <span class="stat-card__label">Disponíveis</span>
-      </div>
-      <div class="stat-card stat-card--red" id="stat-vendido">
-        <span class="stat-card__value">—</span>
-        <span class="stat-card__label">Vendidos</span>
-      </div>
-    </section>
+  <section class="stats" id="stats-bar">
+    <div class="stat-card" id="stat-total">
+      <span class="stat-card__value">—</span>
+      <span class="stat-card__label">Total</span>
+    </div>
+    <div class="stat-card" id="stat-cars">
+      <span class="stat-card__value">—</span>
+      <span class="stat-card__label">Carros</span>
+    </div>
+    <div class="stat-card" id="stat-motos">
+      <span class="stat-card__value">—</span>
+      <span class="stat-card__label">Motos</span>
+    </div>
+    <div class="stat-card stat-card--green" id="stat-disponivel">
+      <span class="stat-card__value">—</span>
+      <span class="stat-card__label">Disponíveis</span>
+    </div>
+    <div class="stat-card stat-card--red" id="stat-vendido">
+      <span class="stat-card__value">—</span>
+      <span class="stat-card__label">Vendidos</span>
+    </div>
+  </section>
 
-    <section class="filters">
-      <div class="filters__search">
-        <span class="filters__search-icon">⌕</span>
-        <input
-          type="text"
-          id="search-model"
-          class="input filters__search-input"
-          placeholder="Buscar por modelo..."
-        />
-      </div>
+  <section class="filters">
+    <div class="filters__search">
+      <span class="filters__search-icon">⌕</span>
+      <input
+              type="text"
+              id="search-model"
+              class="input filters__search-input"
+              placeholder="Buscar por modelo..."
+      />
+    </div>
 
-      <div class="filters__selects">
-        <select id="filter-brand" class="input select">
-          <option value="">Todas as marcas</option>
+    <div class="filters__selects">
+      <select id="filter-type" class="input select">
+        <option value="">Todos os tipos</option>
+        <option value="CAR">Carro</option>
+        <option value="MOTORCYCLE">Moto</option>
+      </select>
+
+      <select id="filter-brand" class="input select">
+        <option value="">Todas as marcas</option>
+        <optgroup label="Carros">
           <option value="TOYOTA">Toyota</option>
           <option value="VOLKSWAGEN">Volkswagen</option>
           <option value="CHEVROLET">Chevrolet</option>
@@ -76,193 +91,241 @@
           <option value="BMW">BMW</option>
           <option value="MERCEDES_BENZ">Mercedes-Benz</option>
           <option value="AUDI">Audi</option>
-        </select>
+        </optgroup>
+        <optgroup label="Motos">
+          <option value="HONDA_MOTO">Honda</option>
+          <option value="YAMAHA">Yamaha</option>
+          <option value="SUZUKI">Suzuki</option>
+          <option value="KAWASAKI">Kawasaki</option>
+          <option value="BMW_MOTO">BMW</option>
+          <option value="HARLEY_DAVIDSON">Harley-Davidson</option>
+          <option value="DUCATI">Ducati</option>
+          <option value="KTM">KTM</option>
+          <option value="TRIUMPH">Triumph</option>
+          <option value="ROYAL_ENFIELD">Royal Enfield</option>
+        </optgroup>
+      </select>
 
-        <select id="filter-color" class="input select">
-          <option value="">Todas as cores</option>
-          <option value="PRETO">Preto</option>
-          <option value="BRANCO">Branco</option>
-          <option value="PRATA">Prata</option>
-          <option value="CINZA">Cinza</option>
-          <option value="VERMELHO">Vermelho</option>
-          <option value="AZUL">Azul</option>
-          <option value="OUTRA">Outra</option>
-        </select>
+      <select id="filter-color" class="input select">
+        <option value="">Todas as cores</option>
+        <option value="PRETO">Preto</option>
+        <option value="BRANCO">Branco</option>
+        <option value="PRATA">Prata</option>
+        <option value="CINZA">Cinza</option>
+        <option value="VERMELHO">Vermelho</option>
+        <option value="AZUL">Azul</option>
+        <option value="OUTRA">Outra</option>
+      </select>
 
-        <select id="filter-status" class="input select">
-          <option value="">Todos os status</option>
-          <option value="DISPONIVEL">Disponível</option>
-          <option value="VENDIDO">Vendido</option>
-        </select>
+      <select id="filter-status" class="input select">
+        <option value="">Todos os status</option>
+        <option value="DISPONIVEL">Disponível</option>
+        <option value="VENDIDO">Vendido</option>
+      </select>
 
-        <button class="btn btn--ghost" id="btn-clear-filters">✕ Limpar</button>
-      </div>
-    </section>
-
-    <section class="table-section">
-      <div class="loading" id="loading">
-        <div class="loading__spinner"></div>
-        <span>Carregando veículos...</span>
-      </div>
-
-      <div class="empty-state" id="empty-state" style="display:none;">
-        <span class="empty-state__icon">🚗</span>
-        <p>Nenhum veículo encontrado.</p>
-        <button class="btn btn--primary" id="btn-open-modal-empty">Cadastrar veículo</button>
-      </div>
-
-      <div class="table-wrapper" id="table-wrapper" style="display:none;">
-        <table class="table" id="vehicles-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Marca / Modelo</th>
-              <th>Versão</th>
-              <th>Ano</th>
-              <th>Cor</th>
-              <th>KM</th>
-              <th>Preço</th>
-              <th>Status</th>
-              <th class="th--actions">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="vehicles-tbody"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Formulário de veículo">
-    <div class="modal">
-      <div class="modal__header">
-        <h2 class="modal__title" id="modal-title">Novo Veículo</h2>
-        <button class="modal__close" id="btn-close-modal" aria-label="Fechar">✕</button>
-      </div>
-
-      <form class="modal__form" id="vehicle-form" novalidate>
-
-        <input type="hidden" id="vehicle-id" />
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="label" for="field-brand">Marca <span class="required">*</span></label>
-            <select id="field-brand" name="brand" class="input select" required>
-              <option value="">Selecione a marca</option>
-              <option value="TOYOTA">Toyota</option>
-              <option value="VOLKSWAGEN">Volkswagen</option>
-              <option value="CHEVROLET">Chevrolet</option>
-              <option value="FIAT">Fiat</option>
-              <option value="FORD">Ford</option>
-              <option value="HONDA">Honda</option>
-              <option value="HYUNDAI">Hyundai</option>
-              <option value="NISSAN">Nissan</option>
-              <option value="RENAULT">Renault</option>
-              <option value="PEUGEOT">Peugeot</option>
-              <option value="CITROEN">Citroën</option>
-              <option value="JEEP">Jeep</option>
-              <option value="MITSUBISHI">Mitsubishi</option>
-              <option value="KIA">Kia</option>
-              <option value="BMW">BMW</option>
-              <option value="MERCEDES_BENZ">Mercedes-Benz</option>
-              <option value="AUDI">Audi</option>
-            </select>
-            <span class="field-error" id="err-brand"></span>
-          </div>
-
-          <div class="form-group">
-            <label class="label" for="field-model">Modelo <span class="required">*</span></label>
-            <input type="text" id="field-model" name="model" class="input" placeholder="Ex: Corolla" required />
-            <span class="field-error" id="err-model"></span>
-          </div>
-        </div>
-
-  
-        <div class="form-row">
-          <div class="form-group">
-            <label class="label" for="field-version">Versão <span class="required">*</span></label>
-            <input type="text" id="field-version" name="version" class="input" placeholder="Ex: XEi 2.0 AT" required />
-            <span class="field-error" id="err-version"></span>
-          </div>
-
-          <div class="form-group">
-            <label class="label" for="field-year">Ano <span class="required">*</span></label>
-            <input type="number" id="field-year" name="vehicleYear" class="input" placeholder="Ex: 2022" min="1900" max="2099" required />
-            <span class="field-error" id="err-year"></span>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="label" for="field-price">Preço (R$) <span class="required">*</span></label>
-            <input type="number" id="field-price" name="price" class="input" placeholder="Ex: 89900.00" min="0" step="0.01" required />
-            <span class="field-error" id="err-price"></span>
-          </div>
-
-          <div class="form-group">
-            <label class="label" for="field-mileage">Quilometragem <span class="required">*</span></label>
-            <input type="number" id="field-mileage" name="mileage" class="input" placeholder="Ex: 35000" min="0" required />
-            <span class="field-error" id="err-mileage"></span>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="label" for="field-color">Cor <span class="required">*</span></label>
-            <select id="field-color" name="color" class="input select" required>
-              <option value="">Selecione a cor</option>
-              <option value="PRETO">Preto</option>
-              <option value="BRANCO">Branco</option>
-              <option value="PRATA">Prata</option>
-              <option value="CINZA">Cinza</option>
-              <option value="VERMELHO">Vermelho</option>
-              <option value="AZUL">Azul</option>
-              <option value="OUTRA">Outra</option>
-            </select>
-            <span class="field-error" id="err-color"></span>
-          </div>
-
-          <div class="form-group" id="custom-color-group" style="display:none;">
-            <label class="label" for="field-custom-color">Cor personalizada <span class="required">*</span></label>
-            <input type="text" id="field-custom-color" name="customColor" class="input" placeholder="Ex: Verde musgo" />
-            <span class="field-error" id="err-custom-color"></span>
-          </div>
-        </div>
-
-        <div class="form-row form-row--single">
-          <div class="form-group">
-            <label class="label" for="field-status">Status <span class="required">*</span></label>
-            <select id="field-status" name="status" class="input select" required>
-              <option value="">Selecione o status</option>
-              <option value="DISPONIVEL">Disponível</option>
-              <option value="VENDIDO">Vendido</option>
-            </select>
-            <span class="field-error" id="err-status"></span>
-          </div>
-        </div>
-
-        <div class="modal__actions">
-          <button type="button" class="btn btn--ghost" id="btn-cancel-form">Cancelar</button>
-          <button type="submit" class="btn btn--primary" id="btn-submit-form">
-            <span id="btn-submit-text">Salvar Veículo</span>
-          </button>
-        </div>
-      </form>
+      <button class="btn btn--ghost" id="btn-clear-filters">✕ Limpar</button>
     </div>
-  </div>
+  </section>
 
-  <div class="modal-overlay" id="confirm-overlay" style="display:none;">
-    <div class="modal modal--confirm">
-      <div class="modal__header">
-        <h2 class="modal__title">Confirmar exclusão</h2>
+  <section class="table-section">
+    <div class="loading" id="loading">
+      <div class="loading__spinner"></div>
+      <span>Carregando veículos...</span>
+    </div>
+
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <span class="empty-state__icon">🚗</span>
+      <p>Nenhum veículo encontrado.</p>
+      <button class="btn btn--primary" id="btn-open-modal-empty">Cadastrar veículo</button>
+    </div>
+
+    <div class="table-wrapper" id="table-wrapper" style="display:none;">
+      <table class="table" id="vehicles-table">
+        <thead>
+        <tr>
+          <th>#</th>
+          <th>Tipo</th>
+          <th>Marca / Modelo</th>
+          <th>Versão</th>
+          <th>Ano</th>
+          <th>Cor</th>
+          <th>KM</th>
+          <th>Preço</th>
+          <th>Status</th>
+          <th class="th--actions">Ações</th>
+        </tr>
+        </thead>
+        <tbody id="vehicles-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- Modal cadastro / edição -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-label="Formulário de veículo">
+  <div class="modal">
+    <div class="modal__header">
+      <h2 class="modal__title" id="modal-title">Novo Veículo</h2>
+      <button class="modal__close" id="btn-close-modal" aria-label="Fechar">✕</button>
+    </div>
+
+    <form class="modal__form" id="vehicle-form" novalidate>
+
+      <input type="hidden" id="vehicle-id" />
+
+      <!-- Tipo de veículo -->
+      <div class="form-row form-row--single">
+        <div class="form-group">
+          <label class="label" for="field-type">Tipo de veículo <span class="required">*</span></label>
+          <div class="type-toggle" id="type-toggle">
+            <button type="button" class="type-btn type-btn--active" data-value="CAR" id="type-btn-car">🚗 Carro</button>
+            <button type="button" class="type-btn" data-value="MOTORCYCLE" id="type-btn-moto">🏍️ Moto</button>
+          </div>
+          <input type="hidden" id="field-type" value="CAR" />
+          <span class="field-error" id="err-type"></span>
+        </div>
       </div>
-      <p class="confirm__message" id="confirm-message">Tem certeza que deseja excluir este veículo?</p>
+
+      <div class="form-row">
+        <!-- Marca de carro -->
+        <div class="form-group" id="group-car-brand">
+          <label class="label" for="field-car-brand">Marca <span class="required">*</span></label>
+          <select id="field-car-brand" name="carBrand" class="input select" required>
+            <option value="">Selecione a marca</option>
+            <option value="TOYOTA">Toyota</option>
+            <option value="VOLKSWAGEN">Volkswagen</option>
+            <option value="CHEVROLET">Chevrolet</option>
+            <option value="FIAT">Fiat</option>
+            <option value="FORD">Ford</option>
+            <option value="HONDA">Honda</option>
+            <option value="HYUNDAI">Hyundai</option>
+            <option value="NISSAN">Nissan</option>
+            <option value="RENAULT">Renault</option>
+            <option value="PEUGEOT">Peugeot</option>
+            <option value="CITROEN">Citroën</option>
+            <option value="JEEP">Jeep</option>
+            <option value="MITSUBISHI">Mitsubishi</option>
+            <option value="KIA">Kia</option>
+            <option value="BMW">BMW</option>
+            <option value="MERCEDES_BENZ">Mercedes-Benz</option>
+            <option value="AUDI">Audi</option>
+          </select>
+          <span class="field-error" id="err-car-brand"></span>
+        </div>
+
+        <!-- Marca de moto (oculto por padrão) -->
+        <div class="form-group" id="group-moto-brand" style="display:none;">
+          <label class="label" for="field-moto-brand">Marca <span class="required">*</span></label>
+          <select id="field-moto-brand" name="motorcycleBrand" class="input select">
+            <option value="">Selecione a marca</option>
+            <option value="HONDA">Honda</option>
+            <option value="YAMAHA">Yamaha</option>
+            <option value="SUZUKI">Suzuki</option>
+            <option value="KAWASAKI">Kawasaki</option>
+            <option value="BMW">BMW</option>
+            <option value="HARLEY_DAVIDSON">Harley-Davidson</option>
+            <option value="DUCATI">Ducati</option>
+            <option value="KTM">KTM</option>
+            <option value="TRIUMPH">Triumph</option>
+            <option value="ROYAL_ENFIELD">Royal Enfield</option>
+          </select>
+          <span class="field-error" id="err-moto-brand"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="field-model">Modelo <span class="required">*</span></label>
+          <input type="text" id="field-model" name="model" class="input" placeholder="Ex: Civic, CB 500" required />
+          <span class="field-error" id="err-model"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label" for="field-version">Versão <span class="required">*</span></label>
+          <input type="text" id="field-version" name="version" class="input" placeholder="Ex: EXL, F ABS" required />
+          <span class="field-error" id="err-version"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="field-year">Ano <span class="required">*</span></label>
+          <input type="number" id="field-year" name="vehicleYear" class="input" placeholder="Ex: 2022" min="1900" max="2099" required />
+          <span class="field-error" id="err-year"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label" for="field-price">Preço (R$) <span class="required">*</span></label>
+          <input type="number" id="field-price" name="price" class="input" placeholder="Ex: 89900.00" min="0" step="0.01" required />
+          <span class="field-error" id="err-price"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="label" for="field-mileage">Quilometragem <span class="required">*</span></label>
+          <input type="number" id="field-mileage" name="mileage" class="input" placeholder="Ex: 35000" min="0" required />
+          <span class="field-error" id="err-mileage"></span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="label" for="field-color">Cor <span class="required">*</span></label>
+          <select id="field-color" name="color" class="input select" required>
+            <option value="">Selecione a cor</option>
+            <option value="PRETO">Preto</option>
+            <option value="BRANCO">Branco</option>
+            <option value="PRATA">Prata</option>
+            <option value="CINZA">Cinza</option>
+            <option value="VERMELHO">Vermelho</option>
+            <option value="AZUL">Azul</option>
+            <option value="OUTRA">Outra</option>
+          </select>
+          <span class="field-error" id="err-color"></span>
+        </div>
+
+        <div class="form-group" id="custom-color-group" style="display:none;">
+          <label class="label" for="field-custom-color">Cor personalizada <span class="required">*</span></label>
+          <input type="text" id="field-custom-color" name="customColor" class="input" placeholder="Ex: Verde musgo" />
+          <span class="field-error" id="err-custom-color"></span>
+        </div>
+      </div>
+
+      <div class="form-row form-row--single">
+        <div class="form-group">
+          <label class="label" for="field-status">Status <span class="required">*</span></label>
+          <select id="field-status" name="status" class="input select" required>
+            <option value="">Selecione o status</option>
+            <option value="DISPONIVEL">Disponível</option>
+            <option value="VENDIDO">Vendido</option>
+          </select>
+          <span class="field-error" id="err-status"></span>
+        </div>
+      </div>
+
       <div class="modal__actions">
-        <button class="btn btn--ghost" id="btn-confirm-cancel">Cancelar</button>
-        <button class="btn btn--danger" id="btn-confirm-ok">Excluir</button>
+        <button type="button" class="btn btn--ghost" id="btn-cancel-form">Cancelar</button>
+        <button type="submit" class="btn btn--primary" id="btn-submit-form">
+          <span id="btn-submit-text">Salvar Veículo</span>
+        </button>
       </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal confirmação exclusão -->
+<div class="modal-overlay" id="confirm-overlay" style="display:none;">
+  <div class="modal modal--confirm">
+    <div class="modal__header">
+      <h2 class="modal__title">Confirmar exclusão</h2>
+    </div>
+    <p class="confirm__message" id="confirm-message">Tem certeza que deseja excluir este veículo?</p>
+    <div class="modal__actions">
+      <button class="btn btn--ghost" id="btn-confirm-cancel">Cancelar</button>
+      <button class="btn btn--danger" id="btn-confirm-ok">Excluir</button>
     </div>
   </div>
+</div>
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

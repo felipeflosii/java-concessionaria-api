@@ -10,7 +10,7 @@
   --text-secondary: #7e8fa8;
   --text-muted:     #4a5668;
 
-  --accent:      #e8a020;  
+  --accent:      #e8a020;
   --accent-dim:  rgba(232,160,32,0.15);
   --accent-glow: rgba(232,160,32,0.35);
 
@@ -108,7 +108,7 @@ body {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
 
@@ -748,4 +748,61 @@ select.input option {
 
   .toast-container { left: 12px; right: 12px; bottom: 16px; }
   .toast { max-width: 100%; }
+}
+
+/* ── Type toggle (Carro / Moto) ───────────────────────── */
+.type-toggle {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 10px 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.type-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.type-btn--active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Type badge na tabela ─────────────────────────────── */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Fix stats grid for 5 cards on tablet ─────────────── */
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
