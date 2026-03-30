@@ -1,178 +1,27 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Concessionária API - Frontend</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-<header class="header">
-  <h1>Concessionária API</h1>
-  <p>Frontend administrativo com CRUD completo para Vehicles, Cars, Motorcycles, Customers e Sales.</p>
-</header>
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- TODO: Set the document title to the name of your application -->
+    <title>Lovable App</title>
+    <meta name="description" content="Lovable Generated Project" />
+    <meta name="author" content="Lovable" />
 
-<div id="toast" class="toast"></div>
+    <!-- TODO: Update og:title to match your application name -->
+    <meta property="og:title" content="Concessionária" />
+    <meta property="og:description" content="Lovable Generated Project" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-<main class="container">
-  <nav class="tabs">
-    <button class="tab-btn active" data-tab="vehicles">Vehicles / Cars / Motorcycles</button>
-    <button class="tab-btn" data-tab="customers">Customers</button>
-    <button class="tab-btn" data-tab="sales">Sales</button>
-  </nav>
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Lovable" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <script type="module" crossorigin src="/assets/index-B24LmOkz.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D_kWjON9.css">
+  </head>
 
-  <section class="tab-content active" id="tab-vehicles">
-    <div class="panel-grid">
-      <section class="card">
-        <h2>Criar / Atualizar Vehicle</h2>
-        <form id="vehicle-form" class="form-grid">
-          <input type="hidden" id="vehicle-id" />
-          <label>Type
-            <select id="vehicle-type" required>
-              <option value="CAR">CAR</option>
-              <option value="MOTORCYCLE">MOTORCYCLE</option>
-            </select>
-          </label>
-          <label>Model <input id="vehicle-model" required /></label>
-          <label>Version <input id="vehicle-version" required /></label>
-          <label>Vehicle Year <input id="vehicle-year" type="number" required /></label>
-          <label>Price <input id="vehicle-price" type="number" step="0.01" required /></label>
-          <label>Mileage <input id="vehicle-mileage" type="number" required /></label>
-          <label>Color
-            <select id="vehicle-color" required>
-              <option>PRETO</option><option>BRANCO</option><option>PRATA</option>
-              <option>CINZA</option><option>VERMELHO</option><option>AZUL</option><option>OUTRA</option>
-            </select>
-          </label>
-          <label>Custom Color <input id="vehicle-custom-color" /></label>
-          <label>Status
-            <select id="vehicle-status" required>
-              <option>DISPONIVEL</option>
-              <option>VENDIDO</option>
-            </select>
-          </label>
-          <label>Car Brand
-            <select id="vehicle-car-brand">
-              <option value="">(none)</option>
-              <option>TOYOTA</option><option>VOLKSWAGEN</option><option>CHEVROLET</option><option>FIAT</option>
-              <option>FORD</option><option>HONDA</option><option>HYUNDAI</option><option>NISSAN</option><option>RENAULT</option>
-              <option>PEUGEOT</option><option>CITROEN</option><option>JEEP</option><option>MITSUBISHI</option><option>KIA</option>
-              <option>BMW</option><option>MERCEDES_BENZ</option><option>AUDI</option>
-            </select>
-          </label>
-          <label>Motorcycle Brand
-            <select id="vehicle-moto-brand">
-              <option value="">(none)</option>
-              <option>HONDA</option><option>YAMAHA</option><option>SUZUKI</option><option>KAWASAKI</option><option>BMW</option>
-              <option>HARLEY_DAVIDSON</option><option>DUCATI</option><option>KTM</option><option>TRIUMPH</option><option>ROYAL_ENFIELD</option>
-            </select>
-          </label>
-          <div class="actions">
-            <button type="submit">Salvar Vehicle</button>
-            <button type="button" id="vehicle-reset" class="secondary">Limpar</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="card">
-        <h2>Consultas rápidas</h2>
-        <div class="actions wrap">
-          <button id="btn-list-vehicles">GET /vehicles</button>
-          <button id="btn-list-cars">GET /cars</button>
-          <button id="btn-list-motorcycles">GET /motorcycles</button>
-        </div>
-        <label>Buscar por ID <input type="number" id="vehicle-get-id" /></label>
-        <div class="actions wrap">
-          <button id="btn-get-vehicle">GET /vehicles/{id}</button>
-          <button id="btn-get-car">GET /cars/{id}</button>
-          <button id="btn-get-motorcycle">GET /motorcycles/{id}</button>
-          <button id="btn-delete-vehicle" class="danger">DELETE /vehicles/{id}</button>
-        </div>
-      </section>
-    </div>
-
-    <section class="card">
-      <h2>Lista de Vehicles (com ações de CRUD)</h2>
-      <table>
-        <thead><tr><th>ID</th><th>Type</th><th>Brand</th><th>Model</th><th>Year</th><th>Price</th><th>Status</th><th>Ações</th></tr></thead>
-        <tbody id="vehicles-tbody"></tbody>
-      </table>
-    </section>
-  </section>
-
-  <section class="tab-content" id="tab-customers">
-    <div class="panel-grid">
-      <section class="card">
-        <h2>CRUD Customers</h2>
-        <form id="customer-form" class="form-grid">
-          <input type="hidden" id="customer-id" />
-          <label>Name <input id="customer-name" required /></label>
-          <label>CPF <input id="customer-cpf" required /></label>
-          <label>Email <input id="customer-email" type="email" required /></label>
-          <label>Phone <input id="customer-phone" /></label>
-          <div class="actions">
-            <button type="submit">Salvar Customer</button>
-            <button type="button" id="customer-reset" class="secondary">Limpar</button>
-          </div>
-        </form>
-        <div class="actions wrap">
-          <button id="btn-list-customers">GET /customers</button>
-          <label>ID <input type="number" id="customer-get-id" /></label>
-          <button id="btn-get-customer">GET /customers/{id}</button>
-          <button id="btn-delete-customer" class="danger">DELETE /customers/{id}</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Lista de Customers</h2>
-        <table>
-          <thead><tr><th>ID</th><th>Name</th><th>CPF</th><th>Email</th><th>Phone</th><th>Ações</th></tr></thead>
-          <tbody id="customers-tbody"></tbody>
-        </table>
-      </section>
-    </div>
-  </section>
-
-  <section class="tab-content" id="tab-sales">
-    <div class="panel-grid">
-      <section class="card">
-        <h2>CRUD Sales</h2>
-        <p class="hint">A API pode não expor PUT /sales/{id}. Se não existir, o frontend mostrará erro da API.</p>
-        <form id="sale-form" class="form-grid">
-          <input type="hidden" id="sale-id" />
-          <label>Vehicle ID <input id="sale-vehicle-id" type="number" required /></label>
-          <label>Customer ID <input id="sale-customer-id" type="number" required /></label>
-          <label>Final Price <input id="sale-final-price" type="number" step="0.01" required /></label>
-          <div class="actions">
-            <button type="submit">Salvar Sale</button>
-            <button type="button" id="sale-reset" class="secondary">Limpar</button>
-          </div>
-        </form>
-
-        <div class="actions wrap">
-          <button id="btn-list-sales">GET /sales</button>
-          <label>ID <input type="number" id="sale-get-id" /></label>
-          <button id="btn-get-sale">GET /sales/{id}</button>
-          <button id="btn-delete-sale" class="danger">DELETE /sales/{id}</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Lista de Sales</h2>
-        <table>
-          <thead><tr><th>ID</th><th>Vehicle</th><th>Customer</th><th>Final Price</th><th>Sale Date</th><th>Ações</th></tr></thead>
-          <tbody id="sales-tbody"></tbody>
-        </table>
-      </section>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>Resposta da API</h2>
-    <pre id="api-output">Clique em uma ação para ver o retorno.</pre>
-  </section>
-</main>
-
-<script src="script.js"></script>
-</body>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
