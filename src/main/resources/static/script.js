@@ -1,563 +1,331 @@
 'use strict';
 
-const API_BASE = 'http://localhost:8080/vehicles';
-
-let allVehicles = [];
-let editingId = null;
-let confirmCallback = null;
-
-const CAR_BRAND_LABELS = {
-  TOYOTA: 'Toyota', VOLKSWAGEN: 'Volkswagen', CHEVROLET: 'Chevrolet',
-  FIAT: 'Fiat', FORD: 'Ford', HONDA: 'Honda', HYUNDAI: 'Hyundai',
-  NISSAN: 'Nissan', RENAULT: 'Renault', PEUGEOT: 'Peugeot',
-  CITROEN: 'Citroën', JEEP: 'Jeep', MITSUBISHI: 'Mitsubishi',
-  KIA: 'Kia', BMW: 'BMW', MERCEDES_BENZ: 'Mercedes-Benz', AUDI: 'Audi',
+const API = {
+  vehicles: '/vehicles',
+  cars: '/cars',
+  motorcycles: '/motorcycles',
+  customers: '/customers',
+  sales: '/sales'
 };
 
-const MOTO_BRAND_LABELS = {
-  HONDA: 'Honda', YAMAHA: 'Yamaha', SUZUKI: 'Suzuki',
-  KAWASAKI: 'Kawasaki', BMW: 'BMW', HARLEY_DAVIDSON: 'Harley-Davidson',
-  DUCATI: 'Ducati', KTM: 'KTM', TRIUMPH: 'Triumph', ROYAL_ENFIELD: 'Royal Enfield',
-};
+const qs = (s) => document.querySelector(s);
+const byId = (id) => document.getElementById(id);
 
-const COLOR_LABELS = {
-  PRETO: 'Preto', BRANCO: 'Branco', PRATA: 'Prata',
-  CINZA: 'Cinza', VERMELHO: 'Vermelho', AZUL: 'Azul', OUTRA: 'Outra',
-};
-
-const COLOR_HEX = {
-  PRETO: '#1a1a1a', BRANCO: '#f0f0f0', PRATA: '#b0b8c1',
-  CINZA: '#6b7280', VERMELHO: '#ef4444', AZUL: '#3b82f6', OUTRA: '#a78bfa',
-};
-
-// --- Helpers ---
-
-function getBrandLabel(vehicle) {
-  if (vehicle.type === 'MOTORCYCLE') {
-    return MOTO_BRAND_LABELS[vehicle.motorcycleBrand] || vehicle.motorcycleBrand;
-  }
-  return CAR_BRAND_LABELS[vehicle.carBrand] || vehicle.carBrand;
+function showToast(message, isError = false) {
+  const toast = byId('toast');
+  toast.textContent = message;
+  toast.className = `toast show ${isError ? 'error' : 'success'}`;
+  setTimeout(() => toast.classList.remove('show'), 2500);
 }
 
-function getBrandValue(vehicle) {
-  return vehicle.type === 'MOTORCYCLE' ? vehicle.motorcycleBrand : vehicle.carBrand;
+function output(data) {
+  byId('api-output').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-}
-
-function formatMileage(value) {
-  return new Intl.NumberFormat('pt-BR').format(value) + ' km';
-}
-
-// --- API ---
-
-async function apiFetchAll() {
-  const res = await fetch(API_BASE);
-  if (!res.ok) throw new Error(`Erro ao buscar veículos: ${res.status}`);
-  return res.json();
-}
-
-async function apiFetchById(id) {
-  const res = await fetch(`${API_BASE}/${id}`);
-  if (!res.ok) throw new Error(`Veículo não encontrado: ${res.status}`);
-  return res.json();
-}
-
-async function apiCreate(data) {
-  const res = await fetch(API_BASE, {
-    method: 'POST',
+async function api(path, options = {}) {
+  const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    ...options
   });
+
+  const text = await res.text();
+  const body = text ? JSON.parse(text || '{}') : null;
+
   if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Erro ao criar veículo: ${res.status} — ${errBody}`);
+    throw new Error(`${res.status} ${res.statusText}${text ? ` - ${text}` : ''}`);
   }
-  return res.json();
+  return body;
 }
 
-async function apiUpdate(id, data) {
-  const res = await fetch(`${API_BASE}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Erro ao atualizar veículo: ${res.status} — ${errBody}`);
-  }
-  return res.json();
-}
-
-async function apiDelete(id) {
-  const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error(`Erro ao excluir veículo: ${res.status}`);
-}
-
-// --- Toast ---
-
-function showToast(message, type = 'success', duration = 3500) {
-  const container = document.getElementById('toast-container');
-  const icon = type === 'success' ? '✓' : '✕';
-  const toast = document.createElement('div');
-  toast.className = `toast toast--${type}`;
-  toast.innerHTML = `<span class="toast__icon">${icon}</span><span>${message}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.animation = 'toastOut 0.25s ease forwards';
-    toast.addEventListener('animationend', () => toast.remove());
-  }, duration);
-}
-
-// --- Confirm dialog ---
-
-function openConfirmDialog(message, onConfirm) {
-  confirmCallback = onConfirm;
-  document.getElementById('confirm-message').textContent = message;
-  const overlay = document.getElementById('confirm-overlay');
-  overlay.style.display = 'flex';
-  overlay.offsetHeight;
-}
-
-function closeConfirmDialog() {
-  document.getElementById('confirm-overlay').style.display = 'none';
-  confirmCallback = null;
-}
-
-// --- Tabela ---
-
-function renderRow(vehicle) {
-  const colorLabel  = vehicle.color === 'OUTRA' && vehicle.customColor
-      ? vehicle.customColor
-      : (COLOR_LABELS[vehicle.color] || vehicle.color);
-  const colorHex    = COLOR_HEX[vehicle.color] || '#a78bfa';
-  const brandLabel  = getBrandLabel(vehicle);
-  const typeIcon    = vehicle.type === 'MOTORCYCLE' ? '🏍️' : '🚗';
-  const typeLabel   = vehicle.type === 'MOTORCYCLE' ? 'Moto' : 'Carro';
-  const statusClass = vehicle.status === 'DISPONIVEL' ? 'disponivel' : 'vendido';
-  const statusLabel = vehicle.status === 'DISPONIVEL' ? 'Disponível' : 'Vendido';
-
-  return `
-    <tr data-id="${vehicle.id}">
-      <td>${vehicle.id}</td>
-      <td>
-        <span class="type-badge" title="${typeLabel}">${typeIcon} ${typeLabel}</span>
-      </td>
-      <td>
-        <div class="vehicle-brand">
-          <span class="vehicle-brand__name">${brandLabel}</span>
-          <span class="vehicle-brand__model">${vehicle.model}</span>
-        </div>
-      </td>
-      <td>${vehicle.version}</td>
-      <td>${vehicle.vehicleYear}</td>
-      <td>
-        <div class="color-dot">
-          <span class="color-dot__circle" style="background:${colorHex}"></span>
-          ${colorLabel}
-        </div>
-      </td>
-      <td class="mileage-value">${formatMileage(vehicle.mileage)}</td>
-      <td><span class="price-value">${formatCurrency(vehicle.price)}</span></td>
-      <td>
-        <button
-          class="badge badge--${statusClass}"
-          data-id="${vehicle.id}"
-          data-status="${vehicle.status}"
-          title="Clique para alternar status"
-          onclick="handleToggleStatus(${vehicle.id}, '${vehicle.status}')"
-        >${statusLabel}</button>
-      </td>
-      <td class="td--actions">
-        <div class="td-actions-inner">
-          <button class="btn btn--icon btn--icon-edit" title="Editar veículo" onclick="handleEditClick(${vehicle.id})">✎</button>
-          <button class="btn btn--icon btn--icon-delete" title="Excluir veículo" onclick="handleDeleteClick(${vehicle.id}, '${brandLabel} ${vehicle.model}')">✕</button>
-        </div>
-      </td>
-    </tr>
-  `;
-}
-
-function renderTable(vehicles) {
-  const loading      = document.getElementById('loading');
-  const emptyState   = document.getElementById('empty-state');
-  const tableWrapper = document.getElementById('table-wrapper');
-  const tbody        = document.getElementById('vehicles-tbody');
-
-  loading.style.display = 'none';
-
-  if (!vehicles || vehicles.length === 0) {
-    emptyState.style.display   = 'flex';
-    tableWrapper.style.display = 'none';
-    return;
-  }
-
-  emptyState.style.display   = 'none';
-  tableWrapper.style.display = 'block';
-  tbody.innerHTML = vehicles.map(renderRow).join('');
-}
-
-function updateStats(vehicles) {
-  const total      = vehicles.length;
-  const cars       = vehicles.filter(v => v.type === 'CAR').length;
-  const motos      = vehicles.filter(v => v.type === 'MOTORCYCLE').length;
-  const disponivel = vehicles.filter(v => v.status === 'DISPONIVEL').length;
-  const vendido    = vehicles.filter(v => v.status === 'VENDIDO').length;
-
-  document.querySelector('#stat-total .stat-card__value').textContent      = total;
-  document.querySelector('#stat-cars .stat-card__value').textContent       = cars;
-  document.querySelector('#stat-motos .stat-card__value').textContent      = motos;
-  document.querySelector('#stat-disponivel .stat-card__value').textContent = disponivel;
-  document.querySelector('#stat-vendido .stat-card__value').textContent    = vendido;
-}
-
-// --- Filtros ---
-
-function applyFilters() {
-  const searchVal = document.getElementById('search-model').value.trim().toLowerCase();
-  const typeVal   = document.getElementById('filter-type').value;
-  const brandVal  = document.getElementById('filter-brand').value;
-  const colorVal  = document.getElementById('filter-color').value;
-  const statusVal = document.getElementById('filter-status').value;
-
-  const filtered = allVehicles.filter(v => {
-    const matchSearch = !searchVal || v.model.toLowerCase().includes(searchVal);
-    const matchType   = !typeVal   || v.type === typeVal;
-    const matchBrand  = !brandVal  || getBrandValue(v) === brandVal;
-    const matchColor  = !colorVal  || v.color === colorVal;
-    const matchStatus = !statusVal || v.status === statusVal;
-    return matchSearch && matchType && matchBrand && matchColor && matchStatus;
-  });
-
-  renderTable(filtered);
-}
-
-function clearFilters() {
-  document.getElementById('search-model').value  = '';
-  document.getElementById('filter-type').value   = '';
-  document.getElementById('filter-brand').value  = '';
-  document.getElementById('filter-color').value  = '';
-  document.getElementById('filter-status').value = '';
-  renderTable(allVehicles);
-}
-
-// --- Modal / Formulário ---
-
-function setVehicleType(type) {
-  document.getElementById('field-type').value = type;
-
-  document.getElementById('type-btn-car').classList.toggle('type-btn--active', type === 'CAR');
-  document.getElementById('type-btn-moto').classList.toggle('type-btn--active', type === 'MOTORCYCLE');
-
-  document.getElementById('group-car-brand').style.display  = type === 'CAR'        ? '' : 'none';
-  document.getElementById('group-moto-brand').style.display = type === 'MOTORCYCLE' ? '' : 'none';
-
-  // Limpa o campo da marca oposta
-  if (type === 'CAR')        document.getElementById('field-moto-brand').value = '';
-  if (type === 'MOTORCYCLE') document.getElementById('field-car-brand').value  = '';
-}
-
-function openModal(mode, vehicle = null) {
-  const overlay = document.getElementById('modal-overlay');
-  const title   = document.getElementById('modal-title');
-  const btnText = document.getElementById('btn-submit-text');
-
-  resetForm();
-
-  if (mode === 'edit' && vehicle) {
-    editingId = vehicle.id;
-    title.textContent   = 'Editar Veículo';
-    btnText.textContent = 'Salvar Alterações';
-
-    const type = vehicle.type || 'CAR';
-    setVehicleType(type);
-
-    document.getElementById('vehicle-id').value    = vehicle.id;
-    document.getElementById('field-model').value   = vehicle.model;
-    document.getElementById('field-version').value = vehicle.version;
-    document.getElementById('field-year').value    = vehicle.vehicleYear;
-    document.getElementById('field-price').value   = vehicle.price;
-    document.getElementById('field-mileage').value = vehicle.mileage;
-    document.getElementById('field-color').value   = vehicle.color;
-    document.getElementById('field-status').value  = vehicle.status;
-
-    if (type === 'CAR')        document.getElementById('field-car-brand').value  = vehicle.carBrand  || '';
-    if (type === 'MOTORCYCLE') document.getElementById('field-moto-brand').value = vehicle.motorcycleBrand || '';
-
-    if (vehicle.color === 'OUTRA') {
-      document.getElementById('custom-color-group').style.display = 'flex';
-      document.getElementById('field-custom-color').value = vehicle.customColor || '';
-    }
-  } else {
-    editingId = null;
-    title.textContent   = 'Novo Veículo';
-    btnText.textContent = 'Salvar Veículo';
-    setVehicleType('CAR');
-  }
-
-  overlay.classList.add('is-open');
-  document.getElementById('field-model').focus();
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('is-open');
-  resetForm();
-  editingId = null;
-}
-
-function resetForm() {
-  document.getElementById('vehicle-form').reset();
-  document.getElementById('vehicle-id').value = '';
-  document.getElementById('custom-color-group').style.display = 'none';
-  document.getElementById('field-custom-color').value = '';
-  setVehicleType('CAR');
-  clearFieldErrors();
-}
-
-function clearFieldErrors() {
-  document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
-  document.querySelectorAll('.input.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-}
-
-function setFieldError(fieldId, errId, message) {
-  const el = document.getElementById(fieldId);
-  if (el) el.classList.add('is-invalid');
-  const errEl = document.getElementById(errId);
-  if (errEl) errEl.textContent = message;
-}
-
-function validateForm() {
-  clearFieldErrors();
-  let valid = true;
-
-  const type    = document.getElementById('field-type').value;
-  const carBrand  = document.getElementById('field-car-brand').value;
-  const motoBrand = document.getElementById('field-moto-brand').value;
-  const model   = document.getElementById('field-model').value.trim();
-  const version = document.getElementById('field-version').value.trim();
-  const year    = document.getElementById('field-year').value;
-  const price   = document.getElementById('field-price').value;
-  const mileage = document.getElementById('field-mileage').value;
-  const color   = document.getElementById('field-color').value;
-  const custom  = document.getElementById('field-custom-color').value.trim();
-  const status  = document.getElementById('field-status').value;
-
-  if (type === 'CAR' && !carBrand) {
-    setFieldError('field-car-brand', 'err-car-brand', 'Selecione a marca.'); valid = false;
-  }
-  if (type === 'MOTORCYCLE' && !motoBrand) {
-    setFieldError('field-moto-brand', 'err-moto-brand', 'Selecione a marca.'); valid = false;
-  }
-
-  if (!model)   { setFieldError('field-model',   'err-model',   'Informe o modelo.');        valid = false; }
-  if (!version) { setFieldError('field-version', 'err-version', 'Informe a versão.');        valid = false; }
-
-  if (!year) {
-    setFieldError('field-year', 'err-year', 'Informe o ano.'); valid = false;
-  } else if (Number(year) < 1900 || Number(year) > 2099) {
-    setFieldError('field-year', 'err-year', 'Ano inválido (1900–2099).'); valid = false;
-  }
-
-  if (!price || Number(price) <= 0) {
-    setFieldError('field-price', 'err-price', 'Informe um preço válido.'); valid = false;
-  }
-
-  if (mileage === '' || Number(mileage) < 0) {
-    setFieldError('field-mileage', 'err-mileage', 'Informe a quilometragem.'); valid = false;
-  }
-
-  if (!color)  { setFieldError('field-color',  'err-color',  'Selecione a cor.'); valid = false; }
-
-  if (color === 'OUTRA' && !custom) {
-    setFieldError('field-custom-color', 'err-custom-color', 'Informe a cor personalizada.'); valid = false;
-  }
-
-  if (!status) { setFieldError('field-status', 'err-status', 'Selecione o status.'); valid = false; }
-
-  if (!valid) return null;
-
-  const data = {
+function getVehiclePayload() {
+  const type = byId('vehicle-type').value;
+  return {
     type,
-    model,
-    version,
-    vehicleYear: Number(year),
-    price:       Number(price),
-    mileage:     Number(mileage),
-    color,
-    status,
+    model: byId('vehicle-model').value.trim(),
+    version: byId('vehicle-version').value.trim(),
+    vehicleYear: Number(byId('vehicle-year').value),
+    price: Number(byId('vehicle-price').value),
+    mileage: Number(byId('vehicle-mileage').value),
+    color: byId('vehicle-color').value,
+    customColor: byId('vehicle-custom-color').value.trim() || null,
+    status: byId('vehicle-status').value,
+    carBrand: type === 'CAR' ? (byId('vehicle-car-brand').value || null) : null,
+    motorcycleBrand: type === 'MOTORCYCLE' ? (byId('vehicle-moto-brand').value || null) : null
   };
-
-  if (type === 'CAR')        data.carBrand        = carBrand;
-  if (type === 'MOTORCYCLE') data.motorcycleBrand = motoBrand;
-  if (color === 'OUTRA')     data.customColor     = custom;
-
-  return data;
 }
 
-// --- Carregamento ---
+function fillVehicleForm(v) {
+  byId('vehicle-id').value = v.id || '';
+  byId('vehicle-type').value = v.type || 'CAR';
+  byId('vehicle-model').value = v.model || '';
+  byId('vehicle-version').value = v.version || '';
+  byId('vehicle-year').value = v.vehicleYear || '';
+  byId('vehicle-price').value = v.price || '';
+  byId('vehicle-mileage').value = v.mileage || '';
+  byId('vehicle-color').value = v.color || 'PRETO';
+  byId('vehicle-custom-color').value = v.customColor || '';
+  byId('vehicle-status').value = v.status || 'DISPONIVEL';
+  byId('vehicle-car-brand').value = v.carBrand || '';
+  byId('vehicle-moto-brand').value = v.motorcycleBrand || '';
+}
 
-async function loadVehicles() {
-  const loading      = document.getElementById('loading');
-  const tableWrapper = document.getElementById('table-wrapper');
-  const emptyState   = document.getElementById('empty-state');
+function clearVehicleForm() {
+  fillVehicleForm({});
+}
 
-  loading.style.display      = 'flex';
-  tableWrapper.style.display = 'none';
-  emptyState.style.display   = 'none';
-
+async function renderVehiclesTable() {
   try {
-    allVehicles = await apiFetchAll();
-    updateStats(allVehicles);
-    applyFilters();
-  } catch (err) {
-    console.error(err);
-    loading.style.display = 'none';
-    showToast('Não foi possível carregar os veículos. Verifique se o backend está rodando.', 'error', 5000);
+    const items = await api(API.vehicles);
+    const tbody = byId('vehicles-tbody');
+    tbody.innerHTML = items.map(v => `
+      <tr>
+        <td>${v.id}</td>
+        <td>${v.type || ''}</td>
+        <td>${v.carBrand || v.motorcycleBrand || '-'}</td>
+        <td>${v.model || ''}</td>
+        <td>${v.vehicleYear || ''}</td>
+        <td>${v.price || ''}</td>
+        <td>${v.status || ''}</td>
+        <td>
+          <button data-edit-vehicle="${v.id}">Editar</button>
+          <button class="danger" data-del-vehicle="${v.id}">Excluir</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showToast(`Falha ao listar vehicles: ${e.message}`, true);
   }
 }
 
-// --- Handlers ---
+function getCustomerPayload() {
+  return {
+    name: byId('customer-name').value.trim(),
+    cpf: byId('customer-cpf').value.trim(),
+    email: byId('customer-email').value.trim(),
+    phone: byId('customer-phone').value.trim() || null
+  };
+}
 
-async function handleEditClick(id) {
+function fillCustomerForm(c) {
+  byId('customer-id').value = c.id || '';
+  byId('customer-name').value = c.name || '';
+  byId('customer-cpf').value = c.cpf || '';
+  byId('customer-email').value = c.email || '';
+  byId('customer-phone').value = c.phone || '';
+}
+
+async function renderCustomersTable() {
   try {
-    const vehicle = await apiFetchById(id);
-    openModal('edit', vehicle);
-  } catch (err) {
-    console.error(err);
-    showToast('Erro ao carregar os dados do veículo.', 'error');
+    const items = await api(API.customers);
+    byId('customers-tbody').innerHTML = items.map(c => `
+      <tr>
+        <td>${c.id}</td><td>${c.name || ''}</td><td>${c.cpf || ''}</td><td>${c.email || ''}</td><td>${c.phone || ''}</td>
+        <td>
+          <button data-edit-customer="${c.id}">Editar</button>
+          <button class="danger" data-del-customer="${c.id}">Excluir</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showToast(`Falha ao listar customers: ${e.message}`, true);
   }
 }
 
-function handleDeleteClick(id, label) {
-  openConfirmDialog(
-      `Tem certeza que deseja excluir "${label}"? Esta ação não pode ser desfeita.`,
-      async () => {
-        try {
-          await apiDelete(id);
-          allVehicles = allVehicles.filter(v => v.id !== id);
-          updateStats(allVehicles);
-          applyFilters();
-          showToast('Veículo excluído com sucesso.', 'success');
-        } catch (err) {
-          console.error(err);
-          showToast('Erro ao excluir o veículo.', 'error');
-        } finally {
-          closeConfirmDialog();
-        }
-      }
-  );
+function getSalePayload() {
+  return {
+    vehicleId: Number(byId('sale-vehicle-id').value),
+    customerId: Number(byId('sale-customer-id').value),
+    finalPrice: Number(byId('sale-final-price').value)
+  };
 }
 
-async function handleToggleStatus(id, currentStatus) {
-  const newStatus = currentStatus === 'DISPONIVEL' ? 'VENDIDO' : 'DISPONIVEL';
-  const label     = newStatus === 'DISPONIVEL' ? 'Disponível' : 'Vendido';
+function fillSaleForm(s) {
+  byId('sale-id').value = s.id || '';
+  byId('sale-vehicle-id').value = s.vehicle?.id || s.vehicleId || '';
+  byId('sale-customer-id').value = s.customer?.id || s.customerId || '';
+  byId('sale-final-price').value = s.finalPrice || '';
+}
+
+async function renderSalesTable() {
   try {
-    const vehicle = await apiFetchById(id);
-    const updated = { ...vehicle, status: newStatus };
-    await apiUpdate(id, updated);
-    const idx = allVehicles.findIndex(v => v.id === id);
-    if (idx !== -1) allVehicles[idx].status = newStatus;
-    updateStats(allVehicles);
-    applyFilters();
-    showToast(`Status alterado para ${label}.`, 'success');
-  } catch (err) {
-    console.error(err);
-    showToast('Erro ao alterar o status.', 'error');
+    const items = await api(API.sales);
+    byId('sales-tbody').innerHTML = items.map(s => `
+      <tr>
+        <td>${s.id}</td>
+        <td>${s.vehicle?.id ?? '-'}</td>
+        <td>${s.customer?.id ?? '-'}</td>
+        <td>${s.finalPrice ?? ''}</td>
+        <td>${s.saleDate ?? ''}</td>
+        <td>
+          <button data-edit-sale="${s.id}">Editar</button>
+          <button class="danger" data-del-sale="${s.id}">Excluir</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    showToast(`Falha ao listar sales: ${e.message}`, true);
   }
 }
 
-async function handleFormSubmit(e) {
-  e.preventDefault();
-  const data = validateForm();
-  if (!data) return;
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      byId(`tab-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+}
 
-  const btn     = document.getElementById('btn-submit-form');
-  const btnText = document.getElementById('btn-submit-text');
-  btn.disabled  = true;
-  btnText.textContent = 'Salvando...';
-
-  try {
-    if (editingId) {
-      const updated = await apiUpdate(editingId, data);
-      const idx = allVehicles.findIndex(v => v.id === editingId);
-      if (idx !== -1) allVehicles[idx] = updated;
-      showToast('Veículo atualizado com sucesso!', 'success');
-    } else {
-      const created = await apiCreate(data);
-      allVehicles.push(created);
-      showToast('Veículo cadastrado com sucesso!', 'success');
+function bindVehicleActions() {
+  byId('vehicle-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = byId('vehicle-id').value;
+    try {
+      const payload = getVehiclePayload();
+      const data = id
+        ? await api(`${API.vehicles}/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+        : await api(API.vehicles, { method: 'POST', body: JSON.stringify(payload) });
+      output(data);
+      showToast(`Vehicle ${id ? 'atualizado' : 'criado'} com sucesso.`);
+      clearVehicleForm();
+      await renderVehiclesTable();
+    } catch (err) {
+      output(err.message);
+      showToast(`Erro em vehicle: ${err.message}`, true);
     }
-    updateStats(allVehicles);
-    applyFilters();
-    closeModal();
-  } catch (err) {
-    console.error(err);
-    showToast(`Erro: ${err.message}`, 'error');
-  } finally {
-    btn.disabled = false;
-    btnText.textContent = editingId ? 'Salvar Alterações' : 'Salvar Veículo';
-  }
+  });
+
+  byId('vehicle-reset').addEventListener('click', clearVehicleForm);
+  byId('btn-list-vehicles').addEventListener('click', async () => output(await api(API.vehicles)));
+  byId('btn-list-cars').addEventListener('click', async () => output(await api(API.cars)));
+  byId('btn-list-motorcycles').addEventListener('click', async () => output(await api(API.motorcycles)));
+
+  byId('btn-get-vehicle').addEventListener('click', async () => output(await api(`${API.vehicles}/${byId('vehicle-get-id').value}`)));
+  byId('btn-get-car').addEventListener('click', async () => output(await api(`${API.cars}/${byId('vehicle-get-id').value}`)));
+  byId('btn-get-motorcycle').addEventListener('click', async () => output(await api(`${API.motorcycles}/${byId('vehicle-get-id').value}`)));
+  byId('btn-delete-vehicle').addEventListener('click', async () => {
+    await api(`${API.vehicles}/${byId('vehicle-get-id').value}`, { method: 'DELETE' });
+    showToast('Vehicle excluído com sucesso.');
+    await renderVehiclesTable();
+  });
+
+  byId('vehicles-tbody').addEventListener('click', async (e) => {
+    const editId = e.target.dataset.editVehicle;
+    const delId = e.target.dataset.delVehicle;
+    if (editId) {
+      const item = await api(`${API.vehicles}/${editId}`);
+      fillVehicleForm(item);
+      output(item);
+    }
+    if (delId) {
+      await api(`${API.vehicles}/${delId}`, { method: 'DELETE' });
+      showToast('Vehicle excluído com sucesso.');
+      await renderVehiclesTable();
+    }
+  });
 }
 
-// --- Init ---
+function bindCustomerActions() {
+  byId('customer-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = byId('customer-id').value;
+    const payload = getCustomerPayload();
+    try {
+      const data = id
+        ? await api(`${API.customers}/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+        : await api(API.customers, { method: 'POST', body: JSON.stringify(payload) });
+      output(data);
+      showToast(`Customer ${id ? 'atualizado' : 'criado'} com sucesso.`);
+      fillCustomerForm({});
+      await renderCustomersTable();
+    } catch (err) {
+      output(err.message);
+      showToast(`Erro em customer: ${err.message}`, true);
+    }
+  });
+
+  byId('customer-reset').addEventListener('click', () => fillCustomerForm({}));
+  byId('btn-list-customers').addEventListener('click', async () => output(await api(API.customers)));
+  byId('btn-get-customer').addEventListener('click', async () => output(await api(`${API.customers}/${byId('customer-get-id').value}`)));
+  byId('btn-delete-customer').addEventListener('click', async () => {
+    await api(`${API.customers}/${byId('customer-get-id').value}`, { method: 'DELETE' });
+    showToast('Customer excluído com sucesso.');
+    await renderCustomersTable();
+  });
+
+  byId('customers-tbody').addEventListener('click', async (e) => {
+    const editId = e.target.dataset.editCustomer;
+    const delId = e.target.dataset.delCustomer;
+    if (editId) {
+      const item = await api(`${API.customers}/${editId}`);
+      fillCustomerForm(item);
+      output(item);
+    }
+    if (delId) {
+      await api(`${API.customers}/${delId}`, { method: 'DELETE' });
+      showToast('Customer excluído com sucesso.');
+      await renderCustomersTable();
+    }
+  });
+}
+
+function bindSaleActions() {
+  byId('sale-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = byId('sale-id').value;
+    const payload = getSalePayload();
+    try {
+      const data = id
+        ? await api(`${API.sales}/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+        : await api(API.sales, { method: 'POST', body: JSON.stringify(payload) });
+      output(data);
+      showToast(`Sale ${id ? 'atualizada' : 'criada'} com sucesso.`);
+      fillSaleForm({});
+      await renderSalesTable();
+    } catch (err) {
+      output(err.message);
+      showToast(`Erro em sale: ${err.message}`, true);
+    }
+  });
+
+  byId('sale-reset').addEventListener('click', () => fillSaleForm({}));
+  byId('btn-list-sales').addEventListener('click', async () => output(await api(API.sales)));
+  byId('btn-get-sale').addEventListener('click', async () => output(await api(`${API.sales}/${byId('sale-get-id').value}`)));
+  byId('btn-delete-sale').addEventListener('click', async () => {
+    await api(`${API.sales}/${byId('sale-get-id').value}`, { method: 'DELETE' });
+    showToast('Sale excluída com sucesso.');
+    await renderSalesTable();
+  });
+
+  byId('sales-tbody').addEventListener('click', async (e) => {
+    const editId = e.target.dataset.editSale;
+    const delId = e.target.dataset.delSale;
+    if (editId) {
+      const item = await api(`${API.sales}/${editId}`);
+      fillSaleForm(item);
+      output(item);
+    }
+    if (delId) {
+      await api(`${API.sales}/${delId}`, { method: 'DELETE' });
+      showToast('Sale excluída com sucesso.');
+      await renderSalesTable();
+    }
+  });
+}
+
+async function init() {
+  initTabs();
+  bindVehicleActions();
+  bindCustomerActions();
+  bindSaleActions();
+  await Promise.allSettled([renderVehiclesTable(), renderCustomersTable(), renderSalesTable()]);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-
-  document.getElementById('btn-open-modal').addEventListener('click', () => openModal('create'));
-  document.getElementById('btn-open-modal-empty').addEventListener('click', () => openModal('create'));
-  document.getElementById('btn-close-modal').addEventListener('click', closeModal);
-  document.getElementById('btn-cancel-form').addEventListener('click', closeModal);
-
-  document.getElementById('modal-overlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  init().catch(err => {
+    output(err.message);
+    showToast(err.message, true);
   });
-
-  // Botões de tipo de veículo
-  document.querySelectorAll('.type-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setVehicleType(btn.dataset.value); });
-  });
-
-  document.getElementById('vehicle-form').addEventListener('submit', handleFormSubmit);
-
-  document.getElementById('field-color').addEventListener('change', (e) => {
-    const group = document.getElementById('custom-color-group');
-    if (e.target.value === 'OUTRA') {
-      group.style.display = 'flex';
-      document.getElementById('field-custom-color').focus();
-    } else {
-      group.style.display = 'none';
-      document.getElementById('field-custom-color').value = '';
-      document.getElementById('field-custom-color').classList.remove('is-invalid');
-      document.getElementById('err-custom-color').textContent = '';
-    }
-  });
-
-  document.getElementById('search-model').addEventListener('input', applyFilters);
-  document.getElementById('filter-type').addEventListener('change', applyFilters);
-  document.getElementById('filter-brand').addEventListener('change', applyFilters);
-  document.getElementById('filter-color').addEventListener('change', applyFilters);
-  document.getElementById('filter-status').addEventListener('change', applyFilters);
-  document.getElementById('btn-clear-filters').addEventListener('click', clearFilters);
-
-  document.getElementById('btn-confirm-ok').addEventListener('click', () => {
-    if (typeof confirmCallback === 'function') confirmCallback();
-  });
-  document.getElementById('btn-confirm-cancel').addEventListener('click', closeConfirmDialog);
-  document.getElementById('confirm-overlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('confirm-overlay')) closeConfirmDialog();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (document.getElementById('confirm-overlay').style.display === 'flex') {
-        closeConfirmDialog();
-      } else if (document.getElementById('modal-overlay').classList.contains('is-open')) {
-        closeModal();
-      }
-    }
-  });
-
-  loadVehicles();
 });
