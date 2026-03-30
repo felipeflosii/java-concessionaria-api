@@ -17,10 +17,12 @@ public class Sale {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
+    @NotNull
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;

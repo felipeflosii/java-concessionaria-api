@@ -21,10 +21,11 @@ public class CustomerService {
 
     public Customer getById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer not found"));
     }
 
     public Customer create(Customer customer) {
+        customer.setId(null);
         return repository.save(customer);
     }
 

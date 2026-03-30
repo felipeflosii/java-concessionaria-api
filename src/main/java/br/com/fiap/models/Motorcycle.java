@@ -1,6 +1,6 @@
 package br.com.fiap.models;
 
-import br.com.fiap.enums.CarBrand;
+import br.com.fiap.enums.MotorcycleBrand;
 import br.com.fiap.enums.VehicleColor;
 import br.com.fiap.enums.VehicleStatus;
 import jakarta.persistence.*;
@@ -13,8 +13,8 @@ import java.math.BigDecimal;
 
 @Data
 @Entity
-@Table(name = "vehicles")
-public class Vehicle {
+@Table(name = "motorcycles")
+public class Motorcycle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,7 +22,7 @@ public class Vehicle {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private CarBrand carBrand;
+    private MotorcycleBrand motorcycleBrand;
 
     @NotBlank
     private String model;
